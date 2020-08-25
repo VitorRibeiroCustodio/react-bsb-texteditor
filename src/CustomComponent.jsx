@@ -11,6 +11,7 @@ const CustomComponent = ({ contentState, entityKey, offsetKey, decoratedText }) 
         position: 'absolute',
         top: '-24px',
         left: '10px',
+        color
       }} contentEditable={false}>
         {componentName}
       </span>

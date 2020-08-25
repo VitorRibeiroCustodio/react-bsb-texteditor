@@ -21,3 +21,7 @@
 .toolbarContainer {
   margin-left: 40px;
 }
+
+.DraftEditor-root {
+  padding: 25px;
+}
