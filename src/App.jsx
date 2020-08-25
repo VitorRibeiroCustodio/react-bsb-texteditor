@@ -1,8 +1,11 @@
 import React from 'react';
 import { Editor, EditorState, Modifier, CompositeDecorator } from 'draft-js';
+import * as HTMLConverter from 'draft-convert';
 import 'draft-js/dist/Draft.css';
 import './App.css';
 import CustomComponent from './CustomComponent.jsx';
+
+const componentType = 'CustomComponent';
 
 const getEntityStrategy = (entityType) => (
   contentBlock,
@@ -24,7 +27,10 @@ const COMPOSITE_DECORATOR = new CompositeDecorator([
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {editorState: EditorState.createEmpty(COMPOSITE_DECORATOR)};
+    this.state = {
+      editorState: EditorState.createEmpty(COMPOSITE_DECORATOR),
+      htmlText: '',
+    };
     this.onChange = editorState => this.setState({editorState});
   }
   
@@ -39,7 +45,7 @@ class App extends React.Component {
     e.preventDefault();
     const contentState = editorState.getCurrentContent();
     const selectionState = editorState.getSelection();
-    const contentWithEntity = contentState.createEntity('CustomComponent', 'MUTABLE', {
+    const contentWithEntity = contentState.createEntity(componentType, 'MUTABLE', {
       color: '#513BFF',
       componentName: 'Novatics',
     });
@@ -50,14 +56,31 @@ class App extends React.Component {
     this.setState({ editorState: EditorState.moveFocusToEnd(newEditorState) });
   }
 
+  convertToHtml = (editorState) => {
+    const text = HTMLConverter.convertToHTML({
+      entityToHTML: (entity, originalText) => {
+        if (entity.type === componentType) {
+          return `<${entity.data.componentName}>${originalText}</${entity.data.componentName}>`
+        }
+      },
+    })(editorState.getCurrentContent());
+
+    console.log(text);
+    this.setState({ htmlText: text });
+  }
+
   render() {
     return (
       <div className="appWrapper">
-        <div className="toolbarContainer">
+        <div className="wrapper">
           <button onClick={this.addCustomComponent}>Add Custom Component</button>
+          <button onClick={() => this.convertToHtml(this.state.editorState)}>Text para formato HTML</button>
         </div>
         <div className="editorContainer">
           <Editor editorState={this.state.editorState} onChange={this.onChange} placeholder="Editor" />
+        </div>
+        <div className="wrapper">
+          {this.state.htmlText}
         </div>
       </div>
     );
