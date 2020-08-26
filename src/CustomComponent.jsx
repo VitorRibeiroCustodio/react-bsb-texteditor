@@ -5,7 +5,7 @@ const CustomComponent = ({ contentState, entityKey, offsetKey, decoratedText }) 
   return (
     <span
       data-offset-key={offsetKey}
-      style={{ position: 'relative', backgroundColor: color }}
+      style={{ position: 'relative', backgroundColor: color, display: 'inline' }}
       >
       <span style={{
         position: 'absolute',

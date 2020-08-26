@@ -19,7 +19,8 @@
 }
 
 .wrapper {
-  margin-left: 40px;
+  display: flex;
+  justify-content: space-evenly;
 }
 
 .DraftEditor-root {

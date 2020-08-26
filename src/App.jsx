@@ -1,11 +1,22 @@
 import React from 'react';
-import { Editor, EditorState, Modifier, CompositeDecorator } from 'draft-js';
+import { EditorState, Modifier, CompositeDecorator } from 'draft-js';
+import Editor from 'draft-js-plugins-editor';
 import * as HTMLConverter from 'draft-convert';
+import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
+import createEmojiPlugin from 'draft-js-emoji-plugin';
 import 'draft-js/dist/Draft.css';
+import 'draft-js-inline-toolbar-plugin/lib/plugin.css';
+import 'draft-js-emoji-plugin/lib/plugin.css'
 import './App.css';
 import CustomComponent from './CustomComponent.jsx';
 
 const componentType = 'CustomComponent';
+
+const inlineToolbarPlugin = createInlineToolbarPlugin();
+const emojiPlugin = createEmojiPlugin();
+const { InlineToolbar } = inlineToolbarPlugin;
+const { EmojiSelect } = emojiPlugin;
+const plugins = [inlineToolbarPlugin, emojiPlugin];
 
 const getEntityStrategy = (entityType) => (
   contentBlock,
@@ -19,7 +30,7 @@ const getEntityStrategy = (entityType) => (
 };
 const COMPOSITE_DECORATOR = new CompositeDecorator([
   {
-    strategy: getEntityStrategy('CustomComponent'),
+    strategy: getEntityStrategy(componentType),
     component: CustomComponent,
   },
 ]);
@@ -31,7 +42,6 @@ class App extends React.Component {
       editorState: EditorState.createEmpty(COMPOSITE_DECORATOR),
       htmlText: '',
     };
-    this.onChange = editorState => this.setState({editorState});
   }
   
   updateEditorState = (editorState) => {
@@ -40,24 +50,32 @@ class App extends React.Component {
     })});
   }
 
-  addCustomComponent = (e) => {
-    const { editorState } = this.state;
-    e.preventDefault();
+  addCustomComponent = () => {
+    const { editorState } = this.state;    
     const contentState = editorState.getCurrentContent();
     const selectionState = editorState.getSelection();
-    const contentWithEntity = contentState.createEntity(componentType, 'MUTABLE', {
+    
+    let newContentState = contentState.createEntity(componentType, 'MUTABLE', {
       color: '#513BFF',
       componentName: 'Novatics',
     });
-    const entityKey = contentWithEntity.getLastCreatedEntityKey();
-    let newContentState = Modifier.applyEntity(contentWithEntity, selectionState, entityKey);
-
-    const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
+    const entityKey = contentState.getLastCreatedEntityKey();
+    newContentState = Modifier.applyEntity(newContentState, selectionState, entityKey);
+    const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
     this.setState({ editorState: EditorState.moveFocusToEnd(newEditorState) });
   }
 
   convertToHtml = (editorState) => {
     const text = HTMLConverter.convertToHTML({
+      // blockToHTML: (block) => {
+      //   if (block.type === 'unstyled') {
+      //     return {
+      //       start: '',
+      //       end: '',
+      //     };
+      //   }
+      //   return undefined;
+      // },
       entityToHTML: (entity, originalText) => {
         if (entity.type === componentType) {
           return `<${entity.data.componentName}>${originalText}</${entity.data.componentName}>`
@@ -65,7 +83,6 @@ class App extends React.Component {
       },
     })(editorState.getCurrentContent());
 
-    console.log(text);
     this.setState({ htmlText: text });
   }
 
@@ -73,11 +90,18 @@ class App extends React.Component {
     return (
       <div className="appWrapper">
         <div className="wrapper">
-          <button onClick={this.addCustomComponent}>Add Custom Component</button>
-          <button onClick={() => this.convertToHtml(this.state.editorState)}>Text para formato HTML</button>
+          <button onClick={this.addCustomComponent}>Adicionar Componente React</button>
+          <button onClick={() => this.convertToHtml(this.state.editorState)}>Formato HTML</button>
+          <EmojiSelect />
         </div>
         <div className="editorContainer">
-          <Editor editorState={this.state.editorState} onChange={this.onChange} placeholder="Editor" />
+          <Editor
+            editorState={this.state.editorState}
+            onChange={this.updateEditorState}
+            placeholder="Editor"
+            plugins={plugins}
+          />
+          <InlineToolbar />
         </div>
         <div className="wrapper">
           {this.state.htmlText}
