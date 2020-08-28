@@ -65,7 +65,7 @@ class App extends React.Component {
     });
     const entityKey = contentState.getLastCreatedEntityKey();
     newContentState = Modifier.applyEntity(newContentState, selectionState, entityKey);
-    const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
+    const newEditorState = EditorState.push(editorState, newContentState, '');
     this.setState({ editorState: EditorState.moveFocusToEnd(newEditorState) });
   }
 
